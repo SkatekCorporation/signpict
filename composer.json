@@ -1,0 +1,12 @@
+{
+    "name": "souvenance/copyrightp",
+    "description": "Ajouter une photo sur les images pour le copyrighter...",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Souvenance",
+            "email": "skavunga@gmail.com"
+        }
+    ],
+    "require": {}
+}
