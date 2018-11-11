@@ -8,5 +8,13 @@
             "email": "skavunga@gmail.com"
         }
     ],
-    "require": {}
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
+    ,
+    "require": {
+        "cakephp/filesystem": "^3.6"
+    }
 }
