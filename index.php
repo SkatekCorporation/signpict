@@ -21,5 +21,5 @@ if(empty($options['l'])){
 
 $app = new App(new Folder($options['s']), new Folder($options['d']));
 
-// $app->run();
-$app->getLogo();
+$app->run();
+// $app->getLogo();
