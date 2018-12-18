@@ -1,4 +1,4 @@
-#Signateur d'images
+# Signateur d'images
 
 ## But
 Aider les photographes à integrer rapidement leur logo dans les photos prises avec leurs appareils pour aller rapidement.
@@ -10,9 +10,25 @@ Dans ce cas, le dossier source des photos (qui ne seront pas modifiées) est ```
 Le dossier temporaire est ```tmp```.
 
 ### Procedure d'Utilisation
+Après avoir configurer votre ordinateur et installé php, voici quelques étapes à suivre.
 #### First
 Mettez les images que vous voulez copyrighter dans le dossier ```images/source/```. Et votre logo dans le dossier ```images/logo/```.
 #### Second
 Ensuite, ouvrez votre terminal ou console sur Windows. Deplacez-vous dans le dossier principal et taper la commande ```php index.php```
 #### Third
 Allez verifier vos images dans le dossier ```images/destination```
+
+## Autres informations
+Vous pouvez personaliser certaines choses telle que le dossier source ou le dossier de destination en ajoutant des drapeaux dans la ligne de commande.
+```
+php index.php -d dossier_de_destination -s dossier_source
+```
+Vous pouvez egalement netoyer le dossier de destination avec ceci:
+```
+php index.php --clean destination [d, dest]
+```
+
+## Auteurs
+Skatek Corporation
+Souvenance Kavunga
+Contributeurs
