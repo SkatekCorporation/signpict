@@ -1,1 +1,4 @@
 /vendor/
+/tmp/
+/images/destination/*
+/images/source/*

@@ -4,6 +4,7 @@ namespace App;
 
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
+use Cake\Utility\Text;
 
 class App
 {
@@ -21,6 +22,9 @@ class App
 
     private static $logo = null;
 
+    private static $logoW = 300;
+    private static $logoH = 300;
+
     private static $files = [];
 
     private static $sucess = [];
@@ -28,15 +32,25 @@ class App
 
     private static $text = "0896358335";
 
-    const TRANSPARENCE = 50;
+    private static $font;
 
-    const PADDING = 10;
+    const TRANSPARENCE = 90;
 
-    public function __construct(Folder $source = null, Folder $destination = null, $tmp = null){
+    const PADDING = 50;
+
+    public function __construct(Folder $source = null, Folder $destination = null, $tmp = null, $options = []){
         self::setSource($source);
         self::setDestination($destination);
         self::setTemp($tmp);
         self::setLogo();
+        self::$font = 4;
+
+        if (isset($options['clean']) && in_array($options['clean'], ['dest', 'd', 'destination'])) {
+
+            exec("rm -fr " . Folder::slashTerm(self::$destination->path) . DS . '*');
+            echo "Clean complete" . PHP_EOL;
+            exit(0);
+        }
     }
 
     /**
@@ -71,25 +85,24 @@ class App
     /**
      * Demarrer l'operation
      */
-    public static function run(){
+    public static function run($logoW = null, $logoH = null){
         $path = Folder::slashTerm(self::$destination->path);
-        $logo = self::resize(self::getLogo(), 50, 20);
-        $groupe = date('d-M-Y His'); $writter = 0;
-        
+        // $logo = self::getLogo();
+        $logo = new File(self::resize(self::getLogo(), $logoW ?? self::$logoW, $logoH ?? self::$logoH));
+
+        $groupe = date('dmY_His'); $writter = 0;
+
         foreach(self::$files[1] as $file_n){
             $file = new File(Folder::slashTerm(self::$source->path) . $file_n);
             $skatek = $path . $groupe . DS . $file->name;
             $newFile = new File($skatek, true);
-            // $newFile->create();
-            // $newFile->write(self::pasteLogo($file), 'wb');
-            // if(touch($skatek)){
-                imagejpeg(self::pasteLogo($file), $skatek);
-                $writter += 1;
 
-            // }
+            imagejpeg(self::pasteLogo($file, $logo), $skatek);
+            $writter += 1;
+
         }
 
-        echo ("{$writter} fichiers écris dans le dossier `{$path}`.\n\nMerci....\nhttp://www.skatek.net\n\n\n");
+        echo ("{$writter} fichiers écris dans le dossier `{$path}{$groupe}`.\n\nMerci....\nhttp://www.skatek.net\n\n\n");
         return 0;
     }
 
@@ -133,11 +146,12 @@ class App
      * Redimensionner une image
      * @param string L'image a redimentionner
      * @param int $width La largeur du redimesion
-     * @param int $height La hauteur du redimension 
+     * @param int $height La hauteur du redimension
      * @return Image
      */
-    public static function resize(File $image = null, $width = 200, $height = 150){
-        
+    public static function resize(File $image = null, $width = 200, $height = 200){
+        //return self::scaleImageFileToBlob($image->path, $width, $height);
+
         if(strtolower($image->ext()) == 'png'){
             $source = imagecreatefrompng($image->path);
         } else {
@@ -148,21 +162,27 @@ class App
         // Les fonctions imagesx et imagesy renvoient la largeur et la hauteur d'une image
         $largeur_source = imagesx($source);
         $hauteur_source = imagesy($source);
-        $largeur_destination = imagesx($destination);
-        $hauteur_destination = imagesy($destination);
 
         // On crée la miniature
-        imagecopyresampled($destination, $source, 0, 0, 0, 0, $largeur_destination, $hauteur_destination, $largeur_source, $hauteur_source);
-        // On enregistre la miniature sous le nom "mini_couchersoleil.jpg"
-        // imagejpeg($destination, "mini_couchersoleil.jpg");
-        return $destination;
+        imagecopyresampled($destination, $source, 0, 0, 0, 0, $width, $height, $largeur_source, $hauteur_source);
+
+        $link = Folder::slashTerm(TMP) . Text::uuid() . '.' . $image->ext();
+
+        if ($image->ext() == 'png') {
+            imagepng($destination, $link);
+        } else {
+            imagejpeg($destination, $link);
+        }
+
+
+        return $link;
     }
 
     /**
      * Coler le logo sur l'image
      * @param File $image L'image en question
      */
-    public static function pasteLogo(File $image = null)
+    public static function pasteLogo(File $image = null, File $logo = null)
     {
         if(self::getLogo() == null){
             self::setError('logo', 'No logo found.')->printErrors();
@@ -172,21 +192,50 @@ class App
             self::setError('source', "No source image.")->printErrors();
         }
 
-        // $destination = new File(Folder::slashTerm(self::$destination->path) . date('Ymd_His_') . $image->name, true);
+        list($largeur_source, $hauteur_source, $source_type) = getimagesize($logo->path);
+        // list($largeur_source, $hauteur_source, $source_type) = getimagesize(self::getLogo()->path);
 
-        $source = imagecreatefrompng(self::getLogo()->path); // Le logo est la source
-        $destination = imagecreatefromjpeg($image->path); // La photo est la destination
-        // Les fonctions imagesx et imagesy renvoient la largeur et la hauteur d'une image
-        $largeur_source = imagesx($source);
-        $hauteur_source = imagesy($source);
-        $largeur_destination = imagesx($destination);
-        $hauteur_destination = imagesy($destination);
+        list($largeur_destination, $hauteur_destination, $destination_type) = getimagesize($image->path);
+
+        switch ($source_type)
+        {
+            case 1: $source = imagecreatefromgif($logo->path); break;
+            case 2: $source = imagecreatefromjpeg($logo->path);  break;
+            case 3: $source = imagecreatefrompng($logo->path); break;
+            default: self::setError('source', "Source image type undefined.")->printErrors(); break;
+        }
+
+        switch ($destination_type)
+        {
+            case 1: $destination = imagecreatefromgif($image->path); break;
+            case 2: $destination = imagecreatefromjpeg($image->path);  break;
+            case 3: $destination = imagecreatefrompng($image->path); break;
+            default: self::setError('destination', "Destination image type undefined.")->printErrors(); break;
+        }
+
+        // On doit determiner l'orientation de l'image, puis l'appliquer
+        if(function_exists("exif_read_data")){
+            $exif_data = exif_read_data($image->path);
+            $exif_orientation = $exif_data['Orientation'];
+
+            switch ($exif_orientation) {
+                case 3: $rotated_image = imagerotate($destination, 180, 0); break;
+                case 6: $rotated_image = imagerotate($destination, -90, 0); break;
+                case 8: $rotated_image = imagerotate($destination, 90, 0); break;
+            }
+        }
+
+        if (isset($rotated_image)) {
+            $destination = $rotated_image;
+        }
+
+
         // On veut placer le logo en bas à droite, on calcule les coordonnées où on doit placer le logo sur la photo
-        $destination_x = ($largeur_destination - $largeur_source) - self::PADDING;
-        $destination_y = ($hauteur_destination - $hauteur_source) - self::PADDING;
+        $destination_x = ( (isset($rotated_image) ? imagesx($destination) : $largeur_destination ) - $largeur_source) - self::PADDING;
+        $destination_y = ( (isset($rotated_image) ? imagesy($destination) : $hauteur_destination) - $hauteur_source) - self::PADDING;
         // On met le logo (source) dans l'image de destination (la photo)
         imagecopymerge($destination, $source, $destination_x, $destination_y, 0, 0, $largeur_source, $hauteur_source, self::TRANSPARENCE);
-
+        // \imagestringup($destination, $font_size, $text_x, $text_y, self::getText(), $noir);
         // On affiche l'image de destination qui a été fusionnée avec le logo
         // imagejpeg($destination);
         return $destination;
@@ -195,12 +244,90 @@ class App
     public static function setError($key, $value = null)
     {
         self::$errors[$key] = $value;
-        return self::class;
+        return new self();
     }
 
     public static function printErrors(){
         print_r("Errors");
         return 1;
+    }
+
+    public static function textImage($text = null){
+        $tn_width = 600;
+        $tn_height = 200;
+
+        $image = imagecreate(200,50);
+        $orange = imagecolorallocate($image, 255, 128, 0); // Le fond est  orange (car c'est la première couleur)
+        imagestring($image, 4, 35, 15, $text ?? self::getText(), $noir);
+        imagecolortransparent($image, $orange); // On rend le fond orange transparent
+
+        return imagepng($image);
+    }
+
+    /**
+    * resize 2
+    */
+    public static function scaleImageFileToBlob($file, $max_width = 200, $max_height = 200) {
+
+        $source_pic = $file;
+
+        list($width, $height, $image_type) = getimagesize($file);
+
+        switch ($image_type)
+        {
+            case 1: $src = imagecreatefromgif($file); break;
+            case 2: $src = imagecreatefromjpeg($file);  break;
+            case 3: $src = imagecreatefrompng($file); break;
+            default: return '';  break;
+        }
+
+        $x_ratio = $max_width / $width;
+        $y_ratio = $max_height / $height;
+
+        if( ($width <= $max_width) && ($height <= $max_height) ){
+            $tn_width = $width;
+            $tn_height = $height;
+            }elseif (($x_ratio * $height) < $max_height){
+                $tn_height = ceil($x_ratio * $height);
+                $tn_width = $max_width;
+            }else{
+                $tn_width = ceil($y_ratio * $width);
+                $tn_height = $max_height;
+        }
+
+        $tmp = imagecreatetruecolor($tn_width,$tn_height);
+
+        /* Check if this image is PNG or GIF, then set if Transparent*/
+        if(($image_type == 1) OR ($image_type==3))
+        {
+            imagealphablending($tmp, false);
+            imagesavealpha($tmp,true);
+            $transparent = imagecolorallocatealpha($tmp, 255, 255, 255, 127);
+            imagefilledrectangle($tmp, 0, 0, $tn_width, $tn_height, $transparent);
+        }
+        imagecopyresampled($tmp,$src,0,0,0,0,$tn_width, $tn_height,$width,$height);
+
+        /*
+         * imageXXX() only has two options, save as a file, or send to the browser.
+         * It does not provide you the oppurtunity to manipulate the final GIF/JPG/PNG file stream
+         * So I start the output buffering, use imageXXX() to output the data stream to the browser,
+         * get the contents of the stream, and use clean to silently discard the buffered contents.
+         */
+        ob_start();
+
+        switch ($image_type)
+        {
+            case 1: imagegif($tmp); break;
+            case 2: imagejpeg($tmp, NULL, 100);  break; // best quality
+            case 3: imagepng($tmp, NULL, 0); break; // no compression
+            default: echo ''; break;
+        }
+
+        $final_image = ob_get_contents();
+
+        ob_end_clean();
+
+        return $final_image;
     }
 
 }

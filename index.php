@@ -19,7 +19,7 @@ if(empty($options['l'])){
     $options['l'] = DEFAULT_LOGO;
 }
 
-$app = new App(new Folder($options['s']), new Folder($options['d']));
+$app = new App(new Folder($options['s']), new Folder($options['d']), null, $options);
 
-$app->run();
+$app->run(500, 500);
 // $app->getLogo();

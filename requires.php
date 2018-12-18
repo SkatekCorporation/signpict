@@ -9,5 +9,5 @@ define("DEFAULT_SOURCE", __DIR__ . DS . 'images' . DS . 'source' . DS);
 define("DEFAULT_LOGO", __DIR__ . DS . 'images' . DS . 'logo' . DS);
 
 function getOptions(){
-    return getopt("s:d:c:l:", ['source:', 'destination:', 'copy:', 'logo:']);
+    return getopt("s:d:c:l:cl:", ['source:', 'destination:', 'copy:', 'logo:', 'clean:']);
 }
