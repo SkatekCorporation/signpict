@@ -1,3 +1,4 @@
+![Google logo](https://www.skatek.net//img/logo-skatek-2.png "Skatek Corporation logo")
 # Signateur d'images
 
 ## But
@@ -21,14 +22,17 @@ Allez verifier vos images dans le dossier ```images/destination```
 ## Autres informations
 Vous pouvez personaliser certaines choses telle que le dossier source ou le dossier de destination en ajoutant des drapeaux dans la ligne de commande.
 ```
-php index.php -d dossier_de_destination -s dossier_source
+php index.php -s dossier_source -d dossier_de_destination
 ```
-Vous pouvez egalement netoyer le dossier de destination avec ceci:
+Vous pouvez egalement nettoyer le dossier de destination avec ceci:
 ```
 php index.php --clean destination [d, dest]
 ```
 
-## Auteurs
-Skatek Corporation
-Souvenance Kavunga
-Contributeurs
+## Remerciements
+* Skatek Corporation
+* Souvenance Kavunga
+* Contributeurs
+
+## Remarques ou suggestions ?
+Faites vos remarques et suggestions en toute tranquiliter pour nous aider à progresser. [Cliquer ici](https://skatek.net/contacts?subject=Remarques%2FCritiques%2FSignPicts&af=enabled#contact-form)
