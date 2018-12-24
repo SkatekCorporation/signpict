@@ -77,6 +77,7 @@ class App
      * @return self
      */
     public static function setSource(Folder $dir = null){
+        echo "Source: " . $dir->path . PHP_EOL;
         self::$source = $dir;
         self::setFiles();
         return self::class;
@@ -92,14 +93,24 @@ class App
 
         $groupe = date('dmY_His'); $writter = 0;
 
+        echo "Destination : `{$path}{$groupe}`" . PHP_EOL;
+
+        if (! is_writable((new Folder($path.$groupe, true))->path) ) {
+            echo "Destination dir is not writable" . PHP_EOL;
+            die;
+        }
+
         foreach(self::$files[1] as $file_n){
             $file = new File(Folder::slashTerm(self::$source->path) . $file_n);
             $skatek = $path . $groupe . DS . $file->name;
             $newFile = new File($skatek, true);
 
-            imagejpeg(self::pasteLogo($file, $logo), $skatek);
-            $writter += 1;
+            if (! in_array(strtolower($file->ext()), ['jpg', 'png', 'gif'])) continue;
 
+            echo ($writter + 1) . ". Ecriture de " . $file->name . " ...\t";
+            if(@imagejpeg(self::pasteLogo($file, $logo), $skatek)) echo "OK" . PHP_EOL;
+            else echo "KO" . PHP_EOL;
+            $writter += 1;
         }
 
         echo ("{$writter} fichiers écris dans le dossier `{$path}{$groupe}`.\n\nMerci....\nhttp://www.skatek.net\n\n\n");
@@ -250,6 +261,7 @@ class App
     public static function printErrors(){
         print_r("Errors");
         return 1;
+        die;
     }
 
     public static function textImage($text = null){
